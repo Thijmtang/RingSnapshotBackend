@@ -5,6 +5,7 @@ import { RingCamera } from "ring-client-api";
 import { encodeBase64, saveImage } from "./ImageHelper.js";
 import { promisify } from "util";
 import path from "path";
+import { Event } from "../interfaces/event.js";
 
 /**
  * Save 5 snapshots with a interval of 2000ms to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -17,6 +18,8 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
   if (!fs.existsSync("./snapshots/")) {
     fs.mkdirSync("./snapshots/");
   }
+
+  // const currentTime = moment();
 
   const dateTodayString = moment(new Date(Number(date))).format("DD-MM-yyyy");
   if (!fs.existsSync("./snapshots/" + dateTodayString)) {
@@ -43,17 +46,49 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
  * @param endDate
  * @returns
  */
-export const getEvents = async (startDate?: Date, endDate?: Date) => {
+export const getEvents = async (
+  filter: "today" | "week" | "month" | "year" | "all" | ""
+) => {
   let array: Array<{
     day: string;
-    events: Array<{ id: string; snapshots: Array<string> }>;
+    events: Array<Event>;
   }> = [];
 
   const directory = `.${path.sep}snapshots`;
   const readDirPromise = promisify(fs.readdir);
   // const readFilePromise = promisify(fs.readFile);
 
-  const days = await readDirPromise(directory);
+  let days = await readDirPromise(directory);
+  if (filter !== "all" && filter !== "") {
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (filter) {
+      case "today":
+        startDate;
+        startDate = moment().startOf("day").toDate();
+        endDate = moment().endOf("day").toDate();
+        break;
+      case "week":
+        startDate = moment().startOf("week").toDate();
+        endDate = moment().endOf("week").toDate();
+        break;
+      case "month":
+        startDate = moment().startOf("month").toDate();
+        endDate = moment().endOf("month").toDate();
+      case "year":
+        startDate = moment().startOf("year").toDate();
+        endDate = moment().endOf("year").toDate();
+        break;
+      default:
+        return; // If the filter is
+    }
+
+    days = days.filter((day: string) => {
+      const dayDate = moment(day, "DD-MM-YYYY").toDate();
+      return dayDate >= startDate && dayDate <= endDate;
+    });
+  }
 
   for (const day of days) {
     // snapshot/date/snapshotdate/all files
@@ -83,4 +118,29 @@ export const getEvents = async (startDate?: Date, endDate?: Date) => {
   }
 
   return array;
+};
+
+export const flattenEvents = (
+  days: Array<{ day: string; events: Array<Event> }>
+) => {
+  const events: Array<Event & { day: string }> = [];
+
+  days.forEach((day) => {
+    const formattedEvents = day.events.map((event) => {
+      const formattedEvent: Event & { day: string } = {
+        id: event.id,
+        snapshots: event.snapshots,
+        day: day.day,
+      };
+      return formattedEvent;
+    });
+
+    events.push(...formattedEvents);
+  });
+
+  events.sort((a, b) => {
+    return parseInt(b.id, 10) - parseInt(a.id, 10);
+  });
+
+  return events;
 };

@@ -1,4 +1,6 @@
 import * as dotenv from "dotenv";
+import cors from "cors";
+
 import express, { Request, Response } from "express";
 import Queue from "queue";
 import {
@@ -7,16 +9,31 @@ import {
   RingApi,
 } from "ring-client-api";
 import { ExtendedResponse } from "ring-client-api/rest-client";
-import { getEvents, saveEventImages } from "./helpers/RingEventHelper.js";
+import {
+  flattenEvents,
+  getEvents,
+  saveEventImages,
+} from "./helpers/RingEventHelper.js";
+
 dotenv.config();
 
 const app = express();
 
+const corsOptions = {
+  origin: process.env.SPA_FRONTEND, // Allow requests from this origin
+};
+
+app.use(cors<Request>(corsOptions));
+
 const PORT = process.env.PORT || 3000;
 
 app.get("/event/all", async (request: Request, response: Response) => {
-  const events = await getEvents();
-  response.send(events);
+  const filter = request.query.filter ?? "";
+  const events = await getEvents(filter);
+
+  const formattedEvents = flattenEvents(events);
+
+  response.send(formattedEvents);
 });
 
 app.listen(PORT, async () => {
