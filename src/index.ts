@@ -1,7 +1,7 @@
-import * as dotenv from "dotenv";
 import cors from "cors";
+import * as dotenv from "dotenv";
 
-import express, { Request, Response } from "express";
+import express, { Request } from "express";
 import Queue from "queue";
 import {
   CameraEventOptions,
@@ -9,35 +9,26 @@ import {
   RingApi,
 } from "ring-client-api";
 import { ExtendedResponse } from "ring-client-api/rest-client";
-import {
-  flattenEvents,
-  getEvents,
-  saveEventImages,
-} from "./helpers/RingEventHelper.js";
+import { saveEventImages } from "./helpers/RingEventHelper.js";
+import eventRouter from "./routes/eventRouter.js";
 
 dotenv.config();
 
 const app = express();
 
 const corsOptions = {
-  origin: process.env.SPA_FRONTEND, // Allow requests from this origin
+  origin: process.env.SPA_FRONTEND,
 };
 
 app.use(cors<Request>(corsOptions));
 
+// Define routes
+app.use("/event", eventRouter);
+
 const PORT = process.env.PORT || 3000;
 
-app.get("/event/all", async (request: Request, response: Response) => {
-  const filter = request.query.filter ?? "";
-  const events = await getEvents(filter);
-
-  const formattedEvents = flattenEvents(events);
-
-  response.send(formattedEvents);
-});
-
 app.listen(PORT, async () => {
-  console.log("ik ben aan");
+  console.log("Express backend running on localhost:3000");
 
   // Run background processes to actively create snapshots when detecting motion.
   const queue = new Queue({ results: [] });
