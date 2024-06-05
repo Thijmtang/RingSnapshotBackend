@@ -11,6 +11,7 @@ import {
 import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
+import dashboardRouter from "./routes/dashboardRouter.js";
 
 dotenv.config();
 
@@ -23,9 +24,24 @@ const corsOptions = {
 app.use(cors<Request>(corsOptions));
 
 // Define routes
+app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
 const PORT = process.env.PORT || 3000;
+
+// Allowed IPs
+const allowedIPs = process.env.ALLOWED_IPS.split(",");
+
+// Middleware to check IP address
+// app.use((req, res, next) => {
+//   const clientIP =
+//     req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+//   if (allowedIPs.includes(clientIP)) {
+//     next();
+//   } else {
+//     res.redirect("/404");
+//   }
+// });
 
 app.listen(PORT, async () => {
   console.log("Express backend running on localhost:3000");

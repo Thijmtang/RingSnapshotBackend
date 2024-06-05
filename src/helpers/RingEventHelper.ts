@@ -6,6 +6,7 @@ import { encodeBase64, saveImage } from "./ImageHelper.js";
 import { promisify } from "util";
 import path from "path";
 import { Event } from "../interfaces/event.js";
+import { Dashboard } from "../interfaces/dashboard.js";
 
 /**
  * Save 5 snapshots with a interval of 2000ms to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -56,7 +57,6 @@ export const getEvents = async (
 
   const directory = `.${path.sep}snapshots`;
   const readDirPromise = promisify(fs.readdir);
-  // const readFilePromise = promisify(fs.readFile);
 
   let days = await readDirPromise(directory);
   if (filter !== "all" && filter !== "") {
@@ -65,7 +65,6 @@ export const getEvents = async (
 
     switch (filter) {
       case "today":
-        startDate;
         startDate = moment().startOf("day").toDate();
         endDate = moment().endOf("day").toDate();
         break;
@@ -76,6 +75,7 @@ export const getEvents = async (
       case "month":
         startDate = moment().startOf("month").toDate();
         endDate = moment().endOf("month").toDate();
+        break;
       case "year":
         startDate = moment().startOf("year").toDate();
         endDate = moment().endOf("year").toDate();
@@ -139,8 +139,18 @@ export const flattenEvents = (
   });
 
   events.sort((a, b) => {
-    return parseInt(b.id, 10) - parseInt(a.id, 10);
+    return parseInt(b.id) - parseInt(a.id);
   });
 
   return events;
+};
+
+export const getDashboardData = async () => {
+  const motionToday = flattenEvents(await getEvents("today"));
+
+  const dashboard: Dashboard = {
+    todayEvents: motionToday,
+  };
+
+  return dashboard;
 };
