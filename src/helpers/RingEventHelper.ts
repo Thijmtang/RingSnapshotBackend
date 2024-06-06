@@ -150,20 +150,23 @@ export const formatEventsForChart = (
   days: Array<{ day: string; events: Array<Event> }>
 ) => {
   const formattedDayEvents: Array<Chartdata> = [];
+
+  // Array with all possible hours
+  const possibleHoursInaDay: { [key: string]: number } = {};
+  for (let i = 0; i < 24; i++) {
+    possibleHoursInaDay[`${i}:00`] = 0;
+  }
+
   days.forEach((day) => {
-    // Count the events per hour
-    const perHourCount: { [key: string]: number } = {};
+    // Count the events which occured per hour
+    const dayPerHourCount: { [key: string]: number } = possibleHoursInaDay;
 
-    const formattedEvents = day.events.map((event) => {
-      const date = moment(parseInt(event.id));
+    let formattedEvents = day.events.map((event) => {
+      const date = `${moment(parseInt(event.id)).hour()}:00`;
 
-      if (perHourCount[date.hour()] === undefined) {
-        perHourCount[date.hour()] = 0;
-      }
+      dayPerHourCount[date]++;
 
-      perHourCount[date.hour()]++;
-
-      return perHourCount;
+      return dayPerHourCount;
     });
 
     formattedDayEvents.push(
