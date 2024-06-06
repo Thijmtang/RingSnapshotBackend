@@ -7,6 +7,7 @@ import { promisify } from "util";
 import path from "path";
 import { Event } from "../interfaces/event.js";
 import { Dashboard } from "../interfaces/dashboard.js";
+import { Chartdata } from "../interfaces/Chartdata.js";
 
 /**
  * Save 5 snapshots with a interval of 2000ms to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -81,7 +82,7 @@ export const getEvents = async (
         endDate = moment().endOf("year").toDate();
         break;
       default:
-        return; // If the filter is
+        return;
     }
 
     days = days.filter((day: string) => {
@@ -145,11 +146,43 @@ export const flattenEvents = (
   return events;
 };
 
+export const formatEventsForChart = (
+  days: Array<{ day: string; events: Array<Event> }>
+) => {
+  const formattedDayEvents: Array<Chartdata> = [];
+  days.forEach((day) => {
+    // Count the events per hour
+    const perHourCount: { [key: string]: number } = {};
+
+    const formattedEvents = day.events.map((event) => {
+      const date = moment(parseInt(event.id));
+
+      if (perHourCount[date.hour()] === undefined) {
+        perHourCount[date.hour()] = 0;
+      }
+
+      perHourCount[date.hour()]++;
+
+      return perHourCount;
+    });
+
+    formattedDayEvents.push(
+      Object.assign({}, { date: day.day }, ...formattedEvents)
+    );
+  });
+
+  return formattedDayEvents;
+};
+
 export const getDashboardData = async () => {
   const motionToday = flattenEvents(await getEvents("today"));
 
+  const monthEvents = await getEvents("month");
+
+  const chartData = formatEventsForChart(monthEvents);
   const dashboard: Dashboard = {
     todayEvents: motionToday,
+    chartData: chartData,
   };
 
   return dashboard;
