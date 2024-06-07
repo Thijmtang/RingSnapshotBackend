@@ -30,7 +30,7 @@ app.use("/event", eventRouter);
 const PORT = process.env.PORT || 3000;
 
 // Allowed IPs
-const allowedIPs = process.env.ALLOWED_IPS.split(",");
+// const allowedIPs = process.env.ALLOWED_IPS.split(",");
 
 // Middleware to check IP address
 // app.use((req, res, next) => {

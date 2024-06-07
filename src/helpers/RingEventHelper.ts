@@ -154,7 +154,7 @@ export const formatEventsForChart = (
   // Array with all possible hours
   const possibleHoursInaDay: { [key: string]: number } = {};
   for (let i = 0; i < 24; i++) {
-    possibleHoursInaDay[`${i}:00`] = 0;
+    possibleHoursInaDay[`${i}:00`] = null;
   }
 
   days.forEach((day) => {
@@ -164,6 +164,9 @@ export const formatEventsForChart = (
     let formattedEvents = day.events.map((event) => {
       const date = `${moment(parseInt(event.id)).hour()}:00`;
 
+      if (dayPerHourCount === undefined) {
+        dayPerHourCount[date] = 0;
+      }
       dayPerHourCount[date]++;
 
       return dayPerHourCount;
