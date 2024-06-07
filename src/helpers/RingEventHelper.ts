@@ -121,9 +121,14 @@ export const getEvents = async (
   return array;
 };
 
+/**
+ * Flatten/merge the arrays seperated by days into a single array with each event object
+ * @param days
+ * @returns
+ */
 export const flattenEvents = (
   days: Array<{ day: string; events: Array<Event> }>
-) => {
+): Array<Event & { day: string }> => {
   const events: Array<Event & { day: string }> = [];
 
   days.forEach((day) => {
@@ -180,15 +185,33 @@ export const formatEventsForChart = (
   return formattedDayEvents;
 };
 
+export const getAverageMotion = (
+  days: Array<{
+    day: string;
+    events: Array<Event>;
+  }>
+): number => {
+  let count = 0;
+
+  days.forEach((day) => {
+    count += day.events.length;
+  });
+
+  return count / days.length;
+};
+
 export const getDashboardData = async () => {
   const motionToday = flattenEvents(await getEvents("today"));
 
   const monthEvents = await getEvents("month");
-
   const chartData = formatEventsForChart(monthEvents);
+
+  const averageDailyMotion = getAverageMotion(monthEvents);
+
   const dashboard: Dashboard = {
     todayEvents: motionToday,
     chartData: chartData,
+    averageDailyMotion: averageDailyMotion,
   };
 
   return dashboard;
