@@ -190,14 +190,14 @@ export const getAverageMotion = (
     day: string;
     events: Array<Event>;
   }>
-): number => {
+): string => {
   let count = 0;
 
   days.forEach((day) => {
     count += day.events.length;
   });
 
-  return count / days.length;
+  return (count / days.length).toFixed(2);
 };
 
 export const getDashboardData = async () => {
