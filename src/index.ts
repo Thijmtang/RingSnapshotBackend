@@ -19,6 +19,9 @@ const app = express();
 
 const corsOptions = {
   origin: process.env.SPA_FRONTEND,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 
 app.use(cors<Request>(corsOptions));
@@ -95,3 +98,5 @@ app.listen(PORT, async () => {
       });
   });
 });
+
+export default app;
