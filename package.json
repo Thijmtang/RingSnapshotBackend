@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc && node ./dist/index.js",
+    "dev": "tsc && node ./dist/src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "vercel-build": "echo hello"
   },

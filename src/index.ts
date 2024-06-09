@@ -1,7 +1,7 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
 
-import express, { Request } from "express";
+import express, { Request, Response } from "express";
 import Queue from "queue";
 import {
   CameraEventOptions,
@@ -12,7 +12,6 @@ import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
-import { Request, Response } from "express";
 
 dotenv.config();
 
