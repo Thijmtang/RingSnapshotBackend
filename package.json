@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "tsc && node ./dist/src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "vercel-build": "echo hello"
+    "start": "ts-node-dev index.ts"
   },
   "keywords": [],
   "author": "",
