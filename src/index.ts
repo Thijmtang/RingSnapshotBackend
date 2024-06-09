@@ -1,7 +1,7 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
 
-import express, { Request, Response } from "express";
+import express, { Request } from "express";
 import Queue from "queue";
 import {
   CameraEventOptions,
@@ -24,15 +24,12 @@ const corsOptions = {
   credentials: true,
 };
 
-// app.use(cors<Request>(corsOptions));
+app.use(cors<Request>(corsOptions));
 
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
-app.get("/", async (request: Request, response: Response) => {
-  response.send("Hallo werkt mijn api?");
-});
 const PORT = process.env.PORT || 3000;
 
 // Allowed IPs
@@ -101,5 +98,3 @@ app.listen(PORT, async () => {
       });
   });
 });
-
-export default app;
