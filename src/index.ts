@@ -12,6 +12,7 @@ import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
+import { Request, Response } from "express";
 
 dotenv.config();
 
@@ -24,12 +25,15 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(cors<Request>(corsOptions));
+// app.use(cors<Request>(corsOptions));
 
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
+app.get("/", async (request: Request, response: Response) => {
+  response.send("Hallo werkt mijn api?");
+});
 const PORT = process.env.PORT || 3000;
 
 // Allowed IPs
