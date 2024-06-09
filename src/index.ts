@@ -52,7 +52,7 @@ app.listen(PORT, async () => {
 
   const ringApi = new RingApi({
     refreshToken: process.env.RING_REFRESH_TOKEN,
-    cameraStatusPollingSeconds: 5,
+    cameraStatusPollingSeconds: 1,
   });
 
   const locations = await ringApi.getLocations();
