@@ -6,9 +6,11 @@ const router = express.Router();
 
 router.get("/all", async (request: Request, response: Response) => {
   const filter = request.query.filter ?? "";
+  const order: "desc" | "asc" = request.query.order ?? "";
+
   const events = await getEvents(filter);
 
-  const formattedEvents = flattenEvents(events);
+  const formattedEvents = flattenEvents(events, order);
 
   response.send(formattedEvents);
 });

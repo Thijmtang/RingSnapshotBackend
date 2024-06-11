@@ -127,7 +127,8 @@ export const getEvents = async (
  * @returns
  */
 export const flattenEvents = (
-  days: Array<{ day: string; events: Array<Event> }>
+  days: Array<{ day: string; events: Array<Event> }>,
+  order: "desc" | "asc" = "asc"
 ): Array<Event & { day: string }> => {
   const events: Array<Event & { day: string }> = [];
 
@@ -144,9 +145,24 @@ export const flattenEvents = (
     events.push(...formattedEvents);
   });
 
-  events.sort((a, b) => {
-    return parseInt(b.id) - parseInt(a.id);
-  });
+  if (order == "desc") {
+    events.sort((a, b) => {
+      return parseInt(b.id) - parseInt(a.id);
+    });
+  }
+
+  switch (order) {
+    case "asc":
+      events.sort((a, b) => {
+        return parseInt(b.id) - parseInt(a.id);
+      });
+      break;
+    case "desc":
+      events.sort((a, b) => {
+        return parseInt(a.id) - parseInt(b.id);
+      });
+      break;
+  }
 
   return events;
 };
