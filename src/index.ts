@@ -16,15 +16,12 @@ import dashboardRouter from "./routes/dashboardRouter.js";
 dotenv.config();
 
 const app = express();
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Not accepted origin
-    if (process.env.SPA_FRONTEND !== origin) {
-      return;
-    }
 
-    callback(null, true);
-  },
+const corsOptions = {
+  origin: process.env.SPA_FRONTEND,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 
 app.use(cors<Request>(corsOptions));
