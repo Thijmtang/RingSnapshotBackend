@@ -16,12 +16,15 @@ import dashboardRouter from "./routes/dashboardRouter.js";
 dotenv.config();
 
 const app = express();
-
 const corsOptions = {
-  origin: process.env.SPA_FRONTEND,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
+  origin: function (origin, callback) {
+    // Not accepted origin
+    if (process.env.SPA_FRONTEND !== origin) {
+      return;
+    }
+
+    callback(null, true);
+  },
 };
 
 app.use(cors<Request>(corsOptions));
@@ -31,20 +34,6 @@ app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
 const PORT = process.env.PORT || 3000;
-
-// Allowed IPs
-// const allowedIPs = process.env.ALLOWED_IPS.split(",");
-
-// Middleware to check IP address
-// app.use((req, res, next) => {
-//   const clientIP =
-//     req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-//   if (allowedIPs.includes(clientIP)) {
-//     next();
-//   } else {
-//     res.redirect("/404");
-//   }
-// });
 
 app.listen(PORT, async () => {
   console.log("Express backend running on localhost:3000");
@@ -71,30 +60,34 @@ app.listen(PORT, async () => {
     kind: "motion",
   };
 
-  // Polling
-  ringDoorbell.onData.subscribe((data) => {
-    // Fetch latest event on each poll
-    ringDoorbell
-      .getEvents(cameraOptions)
-      .then(async (value: CameraEventResponse & ExtendedResponse) => {
-        // We're only fetching the latest event
-        const event = value.events[0];
+  try {
+    ringDoorbell.onData.subscribe((data) => {
+      // Fetch latest event on each poll
+      ringDoorbell
+        .getEvents(cameraOptions)
+        .then(async (value: CameraEventResponse & ExtendedResponse) => {
+          // We're only fetching the latest event
+          const event = value.events[0];
 
-        // Event has already been processed
-        if (lastEvent === event.ding_id_str || event.kind != "motion") {
-          return;
-        }
+          // Event has already been processed
+          if (lastEvent === event.ding_id_str || event.kind != "motion") {
+            return;
+          }
 
-        // Some kind of event detected
-        lastEvent = event.ding_id_str;
+          // Some kind of event detected
+          lastEvent = event.ding_id_str;
 
-        // Add workload to queue
-        queue.push(() => {
-          const date = Date.now();
-          saveEventImages(ringDoorbell, date);
+          // Add workload to queue
+          queue.push(() => {
+            const date = Date.now();
+            saveEventImages(ringDoorbell, date);
+          });
+
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         });
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      });
-  });
+    });
+  } catch (Exception) {
+    console.log(Exception);
+  }
+  // Polling
 });
