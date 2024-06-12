@@ -21,8 +21,6 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     fs.mkdirSync("./snapshots/");
   }
 
-  // const currentTime = moment();
-
   const dateTodayString = moment(new Date(Number(date))).format("DD-MM-yyyy");
   if (!fs.existsSync("./snapshots/" + dateTodayString)) {
     fs.mkdirSync("./snapshots/" + dateTodayString);
@@ -172,16 +170,13 @@ export const formatEventsForChart = (
 ) => {
   const formattedDayEvents: Array<Chartdata> = [];
 
-  // Array with all possible hours
-  const possibleHoursInaDay: { [key: string]: number } = {};
-  for (let i = 0; i < 24; i++) {
-    possibleHoursInaDay[`${i}:00`] = null;
-  }
-
   days.forEach((day) => {
-    // Count the events which occured per hour
-    const dayPerHourCount: { [key: string]: number } = possibleHoursInaDay;
-
+    // Fill array with all possible hours,
+    // Keep count of the events which occured per hour
+    const dayPerHourCount: { [key: string]: number } = {};
+    for (let i = 0; i < 24; i++) {
+      dayPerHourCount[`${i}:00`] = null;
+    }
     let formattedEvents = day.events.map((event) => {
       const date = `${moment(parseInt(event.id)).hour()}:00`;
 
