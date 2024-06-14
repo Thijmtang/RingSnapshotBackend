@@ -1,6 +1,6 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
-
+import { auth } from "express-oauth2-jwt-bearer";
 import express, { Request } from "express";
 import Queue from "queue";
 import {
@@ -12,10 +12,15 @@ import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
-
 dotenv.config();
 
 const app = express();
+
+const jwtCheck = auth({
+  audience: process.env.AUTH0_IDENTIFIER,
+  issuerBaseURL: process.env.AUTH0_DOMAIN,
+  tokenSigningAlg: "RS256",
+});
 
 const corsOptions = {
   origin: process.env.SPA_FRONTEND,
@@ -25,6 +30,7 @@ const corsOptions = {
 };
 
 app.use(cors<Request>(corsOptions));
+app.use(jwtCheck);
 
 // Define routes
 app.use("/dashboard", dashboardRouter);
