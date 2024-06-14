@@ -58,6 +58,7 @@ app.listen(PORT, async () => {
   };
 
   try {
+    // Polling
     ringDoorbell.onData.subscribe((data) => {
       // Fetch latest event on each poll
       ringDoorbell
@@ -89,5 +90,4 @@ app.listen(PORT, async () => {
   } catch (Exception) {
     console.log(Exception);
   }
-  // Polling
 });
