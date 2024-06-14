@@ -81,6 +81,9 @@ app.listen(PORT, async () => {
           });
 
           await new Promise((resolve) => setTimeout(resolve, 5000));
+        })
+        .catch((error) => {
+          console.log("Error occurred:", error);
         });
     });
   } catch (Exception) {
