@@ -17,8 +17,8 @@ dotenv.config();
 const app = express();
 
 const jwtCheck = auth({
-  audience: "ring-motion/api",
-  issuerBaseURL: "https://ring.eu.auth0.com/",
+  audience: process.env.AUTH0_IDENTIFIER,
+  issuerBaseURL: process.env.AUTH0_DOMAIN,
   tokenSigningAlg: "RS256",
 });
 
