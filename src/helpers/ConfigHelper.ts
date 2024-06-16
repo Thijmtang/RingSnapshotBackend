@@ -4,6 +4,9 @@ import * as fs from "fs";
 
 const getConfig = (): DataConfig => {
   const filePath = path.join(process.cwd(), "data.json");
+  if (!fs.existsSync(filePath)) {
+    setConfig({ lastTrackedEventId: "" });
+  }
 
   const data = fs.readFileSync(filePath, "utf8");
   const obj: DataConfig = JSON.parse(data);
