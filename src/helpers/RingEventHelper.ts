@@ -1,5 +1,4 @@
 import * as fs from "fs";
-
 import moment from "moment";
 import { RingCamera } from "ring-client-api";
 import { encodeBase64, saveImage } from "./ImageHelper.js";
@@ -8,7 +7,7 @@ import path from "path";
 import { Event } from "../interfaces/event.js";
 import { Dashboard } from "../interfaces/dashboard.js";
 import { Chartdata } from "../interfaces/Chartdata.js";
-
+import { DataConfig } from "../interfaces/DataConfig.js";
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
  * @param ringCamera
@@ -93,7 +92,6 @@ export const getEvents = async (
       const dayDate = moment(day, "DD-MM-YYYY").toDate();
       return dayDate >= startDate && dayDate <= endDate;
     });
-    console.log(days);
   }
 
   for (const day of days) {

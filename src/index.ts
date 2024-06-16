@@ -12,6 +12,10 @@ import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
+import {
+  getLastTrackedEvent,
+  saveLastTrackedEvent,
+} from "./helpers/ConfigHelper.js";
 dotenv.config();
 
 const app = express();
@@ -54,8 +58,6 @@ app.listen(PORT, async () => {
   const location = locations[0];
   const ringDoorbell = location.cameras[0];
 
-  let lastEvent: string = "";
-
   // Configure the filters, for fetching the events
   const cameraOptions: CameraEventOptions = {
     limit: 1,
@@ -65,11 +67,13 @@ app.listen(PORT, async () => {
 
   try {
     // Polling
-    ringDoorbell.onData.subscribe((data) => {
+    ringDoorbell.onData.subscribe(async (data) => {
       // Fetch latest event on each poll
       ringDoorbell
         .getEvents(cameraOptions)
         .then(async (value: CameraEventResponse & ExtendedResponse) => {
+          const lastEvent = await getLastTrackedEvent();
+
           // We're only fetching the latest event
           const event = value.events[0];
 
@@ -78,8 +82,7 @@ app.listen(PORT, async () => {
             return;
           }
 
-          // Some kind of event detected
-          lastEvent = event.ding_id_str;
+          await saveLastTrackedEvent(event.ding_id_str);
 
           // Add workload to queue
           queue.push(() => {
