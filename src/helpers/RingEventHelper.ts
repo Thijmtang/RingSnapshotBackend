@@ -10,38 +10,41 @@ import { Dashboard } from "../interfaces/dashboard.js";
 import { Chartdata } from "../interfaces/Chartdata.js";
 
 /**
- * Save 5 snapshots with a interval of 2000ms to capture as much of the motion as possible, since getting a snapshot has a huge delay
+ * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
  * @param ringCamera
  * @param date
  */
 export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
-  // Create directory for todays events/snapshots,
-
   if (!fs.existsSync("./snapshots/")) {
     fs.mkdirSync("./snapshots/");
   }
 
+  // Create directory for todays events/snapshots,
   const dateTodayString = moment(new Date(Number(date))).format("DD-MM-yyyy");
   if (!fs.existsSync("./snapshots/" + dateTodayString)) {
     fs.mkdirSync("./snapshots/" + dateTodayString);
   }
 
   for (let i = 0; i < 5; i++) {
-    const result = await ringCamera.getSnapshot();
-    const snapshotDirectory = `./snapshots/${dateTodayString}/${date}/`;
+    try {
+      const result = await ringCamera.getSnapshot();
+      const snapshotDirectory = `./snapshots/${dateTodayString}/${date}/`;
 
-    if (!fs.existsSync(snapshotDirectory)) {
-      fs.mkdirSync(snapshotDirectory);
+      if (!fs.existsSync(snapshotDirectory)) {
+        fs.mkdirSync(snapshotDirectory);
+      }
+
+      saveImage(snapshotDirectory, date.toString() + `-${i}`, result);
+    } catch (e) {
+      console.log(e);
     }
-
-    saveImage(snapshotDirectory, date.toString() + `-${i}`, result);
 
     // Wait for the snapshot to be taken in intervals so we get different images
     await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 };
 /**
- * Fetch the saved snapshots
+ * Fetch the saved snapshots, within the given time period
  * @param startDate
  * @param endDate
  * @returns
@@ -143,24 +146,14 @@ export const flattenEvents = (
     events.push(...formattedEvents);
   });
 
-  if (order == "desc") {
-    events.sort((a, b) => {
-      return parseInt(b.id) - parseInt(a.id);
-    });
-  }
-
-  switch (order) {
-    case "asc":
-      events.sort((a, b) => {
+  events.sort((a, b) => {
+    switch (order) {
+      case "asc":
         return parseInt(b.id) - parseInt(a.id);
-      });
-      break;
-    case "desc":
-      events.sort((a, b) => {
+      case "desc":
         return parseInt(a.id) - parseInt(b.id);
-      });
-      break;
-  }
+    }
+  });
 
   return events;
 };
@@ -196,6 +189,11 @@ export const formatEventsForChart = (
   return formattedDayEvents;
 };
 
+/**
+ * Calculate the average ring dings based on the count of the snapshots within days
+ * @param days
+ * @returns
+ */
 export const getAverageMotion = (
   days: Array<{
     day: string;
@@ -215,6 +213,7 @@ export const getDashboardData = async () => {
   const motionToday = flattenEvents(await getEvents("today"));
 
   const monthEvents = await getEvents("month");
+
   const chartData = formatEventsForChart(monthEvents);
 
   const averageDailyMotion = getAverageMotion(monthEvents);
