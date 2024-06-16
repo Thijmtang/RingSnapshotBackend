@@ -62,34 +62,38 @@ export const getEvents = async (
 
   let days = await readDirPromise(directory);
   if (filter !== "all" && filter !== "") {
-    let startDate: Date;
-    let endDate: Date;
+    let intervalText = "";
 
     switch (filter) {
       case "today":
-        startDate = moment().startOf("day").toDate();
-        endDate = moment().endOf("day").toDate();
+        intervalText = "day";
         break;
       case "week":
-        startDate = moment().startOf("week").toDate();
-        endDate = moment().endOf("week").toDate();
+        intervalText = "week";
         break;
       case "month":
-        startDate = moment().startOf("month").toDate();
-        endDate = moment().endOf("month").toDate();
+        intervalText = "month";
         break;
       case "year":
-        startDate = moment().startOf("year").toDate();
-        endDate = moment().endOf("year").toDate();
+        intervalText = "year";
         break;
       default:
         return;
     }
 
+    const startDate = moment()
+      .startOf(intervalText as moment.unitOfTime.Base)
+      .toDate();
+    const endDate = moment()
+      .endOf(intervalText as moment.unitOfTime.Base)
+      .toDate();
+
+    // Filter out the days which are not within the given time period
     days = days.filter((day: string) => {
       const dayDate = moment(day, "DD-MM-YYYY").toDate();
       return dayDate >= startDate && dayDate <= endDate;
     });
+    console.log(days);
   }
 
   for (const day of days) {
