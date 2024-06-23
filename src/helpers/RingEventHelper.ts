@@ -1,13 +1,12 @@
 import * as fs from "fs";
 import moment from "moment";
-import { RingCamera } from "ring-client-api";
-import { encodeBase64, saveImage } from "./ImageHelper.js";
-import { promisify } from "util";
 import path from "path";
-import { Event } from "../interfaces/event.js";
-import { Dashboard } from "../interfaces/dashboard.js";
+import { RingCamera } from "ring-client-api";
+import { promisify } from "util";
 import { Chartdata } from "../interfaces/Chartdata.js";
-import { DataConfig } from "../interfaces/DataConfig.js";
+import { Dashboard } from "../interfaces/dashboard.js";
+import { Event } from "../interfaces/event.js";
+import { encodeBase64, saveImage } from "./ImageHelper.js";
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
  * @param ringCamera
@@ -148,16 +147,12 @@ export const flattenEvents = (
     events.push(...formattedEvents);
   });
 
-  events.sort((a, b) => {
-    switch (order) {
-      case "asc":
-        return parseInt(b.id) - parseInt(a.id);
-      case "desc":
-        return parseInt(a.id) - parseInt(b.id);
-    }
-  });
-
-  return events;
+  switch (order) {
+    case "asc":
+      return events;
+    case "desc":
+      return events.reverse();
+  }
 };
 
 export const formatEventsForChart = (
