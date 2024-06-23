@@ -149,9 +149,9 @@ export const flattenEvents = (
 
   switch (order) {
     case "asc":
-      return events;
-    case "desc":
       return events.reverse();
+    case "desc":
+      return events;
   }
 };
 
@@ -207,7 +207,7 @@ export const getAverageMotion = (
 };
 
 export const getDashboardData = async () => {
-  const motionToday = flattenEvents(await getEvents("today"), "desc");
+  const motionToday = flattenEvents(await getEvents("today"));
 
   const monthEvents = await getEvents("month");
 
