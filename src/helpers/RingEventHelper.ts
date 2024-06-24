@@ -135,16 +135,13 @@ export const flattenEvents = (
   const events: Array<Event & { day: string }> = [];
 
   days.forEach((day) => {
-    const formattedEvents = day.events.map((event) => {
-      const formattedEvent: Event & { day: string } = {
+    day.events.forEach((event) => {
+      events.push({
         id: event.id,
         snapshots: event.snapshots,
         day: day.day,
-      };
-      return formattedEvent;
+      });
     });
-
-    events.push(...formattedEvents);
   });
 
   switch (order) {
