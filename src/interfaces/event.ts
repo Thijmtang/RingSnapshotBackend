@@ -1,4 +1,4 @@
 export interface Event {
   id: string;
-  snapshots: Array<string>;
+  snapshots?: Array<string>;
 }

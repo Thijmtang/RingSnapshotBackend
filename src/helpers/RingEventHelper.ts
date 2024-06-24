@@ -48,7 +48,8 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
  * @returns
  */
 export const getEvents = async (
-  filter: "today" | "week" | "month" | "year" | "all" | ""
+  filter: "today" | "week" | "month" | "year" | "all" | "",
+  includeSnapshots = false
 ) => {
   let array: Array<{
     day: string;
@@ -76,6 +77,7 @@ export const getEvents = async (
         intervalText = "year";
         break;
       default:
+        intervalText = filter;
         return;
     }
 
@@ -103,13 +105,18 @@ export const getEvents = async (
     // All the snapshots taken during the event
     const eventArray = await Promise.all(
       events.map(async (event: string) => {
-        const snapshots = (
-          await readDirPromise(currentPath + path.sep + event)
-        ).map((snapshot: string) => {
-          return encodeBase64(
-            currentPath + path.sep + event + path.sep + snapshot
-          );
-        });
+        let snapshots = [];
+
+        if (includeSnapshots) {
+          snapshots = (
+            await readDirPromise(currentPath + path.sep + event)
+          ).map((snapshot: string) => {
+            return encodeBase64(
+              currentPath + path.sep + event + path.sep + snapshot
+            );
+          });
+        }
+
         return { id: event, snapshots: snapshots };
       })
     );
@@ -123,9 +130,21 @@ export const getEvents = async (
   return array;
 };
 
+export const getEvent = async (day: string, datetime: string) => {
+  const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}`;
+  const readDirPromise = promisify(fs.readdir);
+
+  let snapshots = await readDirPromise(directory);
+  snapshots = snapshots.map((snapshot) => {
+    return encodeBase64(directory + path.sep + snapshot);
+  });
+
+  return { id: datetime, snapshots: snapshots };
+};
+
 /**
  * Flatten/merge the arrays seperated by days into a single array with each event object
- * @param days
+ * @param days getEvents result array
  * @returns
  */
 export const flattenEvents = (

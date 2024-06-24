@@ -1,6 +1,10 @@
 import express from "express";
 import { Request, Response } from "express";
-import { flattenEvents, getEvents } from "../helpers/RingEventHelper.js";
+import {
+  flattenEvents,
+  getEvent,
+  getEvents,
+} from "../helpers/RingEventHelper.js";
 
 const router = express.Router();
 
@@ -13,6 +17,15 @@ router.get("/all", async (request: Request, response: Response) => {
   const formattedEvents = flattenEvents(events, order);
 
   response.send(formattedEvents);
+});
+
+router.get("/:day/:datetime", async (request: Request, response: Response) => {
+  const day = request.params.day;
+  const datetime = request.params.datetime;
+
+  const event = await getEvent(day, datetime);
+
+  response.send(event);
 });
 
 export default router;
