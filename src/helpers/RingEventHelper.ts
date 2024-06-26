@@ -139,7 +139,7 @@ export const getEvent = async (day: string, datetime: string) => {
     return encodeBase64(directory + path.sep + snapshot);
   });
 
-  return { id: datetime, snapshots: snapshots };
+  return { id: datetime, snapshots: snapshots, day: day };
 };
 
 /**
