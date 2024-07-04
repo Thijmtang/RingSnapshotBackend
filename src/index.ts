@@ -16,6 +16,8 @@ import {
   getLastTrackedEvent,
   saveLastTrackedEvent,
 } from "./helpers/ConfigHelper.js";
+import { promisify } from "util";
+import { readFile, writeFile } from "fs";
 dotenv.config();
 
 const app = express();
@@ -51,7 +53,7 @@ app.listen(PORT, async () => {
 
   const ringApi = new RingApi({
     refreshToken: process.env.RING_REFRESH_TOKEN,
-    cameraStatusPollingSeconds: 1,
+    cameraStatusPollingSeconds: 5,
   });
 
   const locations = await ringApi.getLocations();
@@ -65,6 +67,24 @@ app.listen(PORT, async () => {
     kind: "motion",
   };
 
+  ringApi.onRefreshTokenUpdated.subscribe(
+    async ({ newRefreshToken, oldRefreshToken }) => {
+      console.log("Refresh Token Updated: ", newRefreshToken);
+
+      // If you are implementing a project that use `ring-client-api`, you should subscribe to onRefreshTokenUpdated and update your config each time it fires an event
+      // Here is an example using a .env file for configuration
+      if (!oldRefreshToken) {
+        return;
+      }
+
+      const currentConfig = await promisify(readFile)(".env"),
+        updatedConfig = currentConfig
+          .toString()
+          .replace(oldRefreshToken, newRefreshToken);
+
+      await promisify(writeFile)(".env", updatedConfig);
+    }
+  );
   try {
     // Polling
     ringDoorbell.onData.subscribe(async (data) => {
