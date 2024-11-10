@@ -173,9 +173,9 @@ export const flattenEvents = (
 
   switch (order) {
     case "asc":
-      return events();
+      return sortedEvents;
     case "desc":
-      return events.reverse;
+      return sortedEvents.reverse();
   }
 };
 
