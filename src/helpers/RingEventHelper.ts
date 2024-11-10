@@ -164,8 +164,11 @@ export const flattenEvents = (
   });
 
   const sortedEvents = events.sort((a, b) => {
-    if (a.day < b.day) return -1;
-    if (a.day > b.day) return 1;
+    const dateA = moment(a.day, "DD-MM-YYYY"); // Adjust date format as needed
+    const dateB = moment(b.day, "DD-MM-YYYY"); // Adjust date format as needed
+
+    if (dateA.isBefore(dateB)) return -1;
+    if (dateA.isAfter(dateB)) return 1;
     if (a.id < b.id) return -1;
     if (a.id > b.id) return 1;
     return 0;
