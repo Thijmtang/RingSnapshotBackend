@@ -163,11 +163,19 @@ export const flattenEvents = (
     });
   });
 
+  const sortedEvents = events.sort((a, b) => {
+    if (a.day < b.day) return -1;
+    if (a.day > b.day) return 1;
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+
   switch (order) {
     case "asc":
-      return events.reverse();
+      return events();
     case "desc":
-      return events;
+      return events.reverse;
   }
 };
 
