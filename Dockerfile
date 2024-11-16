@@ -4,8 +4,7 @@ WORKDIR /app
 COPY . .
 RUN npm install
 
-# Expose port 3000, and start the app.
-EXPOSE 3000
+EXPOSE 4000
 
 # Build typescript backend
 RUN npm run build
