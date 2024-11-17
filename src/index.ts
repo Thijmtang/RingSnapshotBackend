@@ -53,7 +53,7 @@ app.listen(PORT, async () => {
   queue.autostart = true;
   const ringApi = new RingApi({
     refreshToken: process.env.RING_REFRESH_TOKEN,
-    cameraStatusPollingSeconds: 5,
+    cameraStatusPollingSeconds: 2,
   });
   const locations = await ringApi.getLocations();
   const location = locations[0];
@@ -93,14 +93,18 @@ app.listen(PORT, async () => {
           if (lastEvent === event.ding_id_str || event.kind != "motion") {
             return;
           }
+
           await saveLastTrackedEvent(event.ding_id_str);
           // Add workload to queue
           queue.push(() => {
             const date = Date.now();
-            ringDoorbell.recordToFile("./boeie.mp4", 10);
             saveEventImages(ringDoorbell, date);
           });
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+
+          // queue.push(() => {
+          ringDoorbell.recordToFile("./test.mp4");
+          // });
+          // await new Promise((resolve) => setTimeout(resolve, 5000));
         })
         .catch((error) => {
           console.log("Error occurred:", error);

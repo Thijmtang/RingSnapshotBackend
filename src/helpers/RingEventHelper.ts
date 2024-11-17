@@ -7,6 +7,7 @@ import { Chartdata } from "../interfaces/Chartdata.js";
 import { Dashboard } from "../interfaces/dashboard.js";
 import { Event } from "../interfaces/event.js";
 import { encodeBase64, saveImage } from "./ImageHelper.js";
+import { Snapshot } from "../interfaces/Snapshot.js";
 
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -40,11 +41,11 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     }
 
     // Wait for the snapshot to be taken in intervals so we get different images
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    // await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 
   // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
-  await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 10);
+  await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 20);
 };
 
 /**
@@ -151,11 +152,28 @@ export const getEvent = async (day: string, datetime: string) => {
     };
   });
 
+  // We are only returning images, to keep the legacy code working
   snapshots = snapshots.filter((s) => {
     return s.type != "video";
   });
 
   return { id: datetime, snapshots: snapshots, day: day };
+};
+
+export const getVideo = async (
+  day: string,
+  datetime: string
+): Promise<Snapshot> => {
+  const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}${path.sep}video.mp4`;
+
+  if (!fs.existsSync(directory)) {
+    throw new Error("Not found");
+  }
+
+  return {
+    media: encodeBase64(directory),
+    type: "video",
+  };
 };
 
 /**
