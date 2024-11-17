@@ -124,7 +124,11 @@ export const getEvents = async (
           });
         }
 
-        return { id: event, snapshots: snapshots };
+        return {
+          id: event,
+          snapshots: snapshots,
+          hasVideo: snapshots.some((s) => s.type === "video"),
+        };
       })
     );
 
@@ -142,22 +146,32 @@ export const getEvent = async (day: string, datetime: string) => {
   const readDirPromise = promisify(fs.readdir);
 
   const snapshotsDir = await readDirPromise(directory);
+  let hasVideo = false;
 
-  let snapshots = snapshotsDir.map((snapshot) => {
-    const ext = path.extname(directory + path.sep + snapshot);
+  let snapshots = snapshotsDir
+    .filter((snapshot) => {
+      const ext = path.extname(directory + path.sep + snapshot);
+      if (ext == ".mp4") {
+        hasVideo = true;
+      }
+      return ext !== ".mp4"; // Skip video files
+    })
+    .map((snapshot) => {
+      const ext = path.extname(directory + path.sep + snapshot);
 
-    return {
-      media: encodeBase64(directory + path.sep + snapshot),
-      type: ext == ".webp" ? "image" : "video",
-    };
-  });
+      return {
+        media: encodeBase64(directory + path.sep + snapshot),
+        type: ext == ".webp" ? "image" : "video",
+      };
+    })
+    .filter((snapshot) => snapshot !== null);
 
   // We are only returning images, to keep the legacy code working
   snapshots = snapshots.filter((s) => {
     return s.type != "video";
   });
 
-  return { id: datetime, snapshots: snapshots, day: day };
+  return { id: datetime, snapshots: snapshots, day: day, hasVideo: hasVideo };
 };
 
 export const getVideo = async (
@@ -193,6 +207,7 @@ export const flattenEvents = (
         id: event.id,
         snapshots: event.snapshots,
         day: day.day,
+        hasVideo: false, // False for now, not neccessary
       });
     });
   });
