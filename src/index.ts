@@ -8,7 +8,6 @@ import {
   CameraEventResponse,
   RingApi,
 } from "ring-client-api";
-import { ExtendedResponse } from "ring-client-api/rest-client";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
@@ -36,7 +35,10 @@ const corsOptions = {
 };
 
 app.use(cors<Request>(corsOptions));
-app.use(jwtCheck);
+
+if (process.env.NODE_ENV == "PROD") {
+  app.use(jwtCheck);
+}
 
 // Define routes
 app.use("/dashboard", dashboardRouter);
