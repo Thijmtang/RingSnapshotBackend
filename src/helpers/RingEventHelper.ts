@@ -234,7 +234,7 @@ export const getAverageMotion = (
 };
 
 export const getDashboardData = async () => {
-  const motionToday = flattenEvents(await getEvents("today"));
+  const motionToday = flattenEvents(await getEvents("today"), "desc");
 
   const monthEvents = await getEvents("month");
 
