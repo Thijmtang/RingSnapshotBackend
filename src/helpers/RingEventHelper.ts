@@ -7,6 +7,8 @@ import { Chartdata } from "../interfaces/Chartdata.js";
 import { Dashboard } from "../interfaces/dashboard.js";
 import { Event } from "../interfaces/event.js";
 import { encodeBase64, saveImage } from "./ImageHelper.js";
+import { Snapshot } from "../interfaces/Snapshot.js";
+
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
  * @param ringCamera
@@ -23,14 +25,15 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     fs.mkdirSync("./snapshots/" + dateTodayString);
   }
 
+  const snapshotDirectory = `./snapshots/${dateTodayString}/${date}/`;
+
+  if (!fs.existsSync(snapshotDirectory)) {
+    fs.mkdirSync(snapshotDirectory);
+  }
+
   for (let i = 0; i < 5; i++) {
     try {
       const result = await ringCamera.getSnapshot();
-      const snapshotDirectory = `./snapshots/${dateTodayString}/${date}/`;
-
-      if (!fs.existsSync(snapshotDirectory)) {
-        fs.mkdirSync(snapshotDirectory);
-      }
 
       saveImage(snapshotDirectory, date.toString() + `-${i}`, result);
     } catch (e) {
@@ -38,9 +41,13 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     }
 
     // Wait for the snapshot to be taken in intervals so we get different images
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    // await new Promise((resolve) => setTimeout(resolve, 4000));
   }
+
+  // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
+  await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 20);
 };
+
 /**
  * Fetch the saved snapshots, within the given time period
  * @param startDate
@@ -134,12 +141,39 @@ export const getEvent = async (day: string, datetime: string) => {
   const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}`;
   const readDirPromise = promisify(fs.readdir);
 
-  let snapshots = await readDirPromise(directory);
-  snapshots = snapshots.map((snapshot) => {
-    return encodeBase64(directory + path.sep + snapshot);
+  const snapshotsDir = await readDirPromise(directory);
+
+  let snapshots = snapshotsDir.map((snapshot) => {
+    const ext = path.extname(directory + path.sep + snapshot);
+
+    return {
+      media: encodeBase64(directory + path.sep + snapshot),
+      type: ext == ".webp" ? "image" : "video",
+    };
+  });
+
+  // We are only returning images, to keep the legacy code working
+  snapshots = snapshots.filter((s) => {
+    return s.type != "video";
   });
 
   return { id: datetime, snapshots: snapshots, day: day };
+};
+
+export const getVideo = async (
+  day: string,
+  datetime: string
+): Promise<Snapshot> => {
+  const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}${path.sep}video.mp4`;
+
+  if (!fs.existsSync(directory)) {
+    throw new Error("Not found");
+  }
+
+  return {
+    media: encodeBase64(directory),
+    type: "video",
+  };
 };
 
 /**

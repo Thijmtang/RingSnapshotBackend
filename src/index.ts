@@ -47,43 +47,35 @@ app.use("/event", eventRouter);
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
-  console.log("Express backend running on localhost:3000");
-
+  console.log(`Express backend running on localhost:${PORT}`);
   // Run background processes to actively create snapshots when detecting motion.
   const queue = new Queue({ results: [] });
   queue.autostart = true;
-
   const ringApi = new RingApi({
     refreshToken: process.env.RING_REFRESH_TOKEN,
-    cameraStatusPollingSeconds: 5,
+    cameraStatusPollingSeconds: 2,
   });
-
   const locations = await ringApi.getLocations();
   const location = locations[0];
   const ringDoorbell = location.cameras[0];
-
   // Configure the filters, for fetching the events
   const cameraOptions: CameraEventOptions = {
     limit: 1,
     state: "person_detected",
     kind: "motion",
   };
-
   ringApi.onRefreshTokenUpdated.subscribe(
     async ({ newRefreshToken, oldRefreshToken }) => {
       console.log("Refresh Token Updated: ", newRefreshToken);
-
       // If you are implementing a project that use `ring-client-api`, you should subscribe to onRefreshTokenUpdated and update your config each time it fires an event
       // Here is an example using a .env file for configuration
       if (!oldRefreshToken) {
         return;
       }
-
       const currentConfig = await promisify(readFile)(".env"),
         updatedConfig = currentConfig
           .toString()
           .replace(oldRefreshToken, newRefreshToken);
-
       await promisify(writeFile)(".env", updatedConfig);
     }
   );
@@ -93,26 +85,26 @@ app.listen(PORT, async () => {
       // Fetch latest event on each poll
       ringDoorbell
         .getEvents(cameraOptions)
-        .then(async (value: CameraEventResponse & ExtendedResponse) => {
+        .then(async (value: CameraEventResponse) => {
           const lastEvent = await getLastTrackedEvent();
-
           // We're only fetching the latest event
           const event = value.events[0];
-
           // Event has already been processed
           if (lastEvent === event.ding_id_str || event.kind != "motion") {
             return;
           }
 
           await saveLastTrackedEvent(event.ding_id_str);
-
           // Add workload to queue
           queue.push(() => {
             const date = Date.now();
             saveEventImages(ringDoorbell, date);
           });
 
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // queue.push(() => {
+          ringDoorbell.recordToFile("./test.mp4");
+          // });
+          // await new Promise((resolve) => setTimeout(resolve, 5000));
         })
         .catch((error) => {
           console.log("Error occurred:", error);
