@@ -192,15 +192,14 @@ export const getEvent = async (
   });
 
   // Only allow user to view a video, if its done recording and encoding
-  const date = moment(day, "DD-MM-YYYY").startOf("day");
-  date.add(parseInt(datetime), "milliseconds");
-  const hasMinutePassed = moment().diff(date, "minutes") >= 2;
-
+  const date = moment(parseInt(datetime)); // Parse the day
+  const minutesAgo = moment().diff(date, "minutes");
+  console.log(minutesAgo);
   return {
     id: datetime,
     snapshots: snapshots,
     day: day,
-    hasVideo: hasMinutePassed ? hasVideo : false,
+    hasVideo: minutesAgo > 1 ? hasVideo : false,
   };
 };
 
