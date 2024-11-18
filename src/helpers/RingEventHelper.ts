@@ -194,7 +194,6 @@ export const getEvent = async (
   // Only allow user to view a video, if its done recording and encoding
   const date = moment(parseInt(datetime)); // Parse the day
   const minutesAgo = moment().diff(date, "minutes");
-  console.log(minutesAgo);
   return {
     id: datetime,
     snapshots: snapshots,
@@ -236,7 +235,7 @@ export const flattenEvents = (
         id: event.id,
         snapshots: event.snapshots,
         day: day.day,
-        hasVideo: false, // False for now, not neccessary
+        hasVideo: event.hasVideo, // False for now, not neccessary
       });
     });
   });
