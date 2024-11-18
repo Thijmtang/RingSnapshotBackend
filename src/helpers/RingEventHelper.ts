@@ -45,7 +45,7 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
   }
 
   // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
-  await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 20);
+  await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 60);
 };
 
 /**
