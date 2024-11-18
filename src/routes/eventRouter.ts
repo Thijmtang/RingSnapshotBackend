@@ -9,6 +9,9 @@ import {
 
 const router = express.Router();
 
+/**
+ * Fetch all events, without snapshots
+ */
 router.get("/all", async (request: Request, response: Response) => {
   const filter = request.query.filter ?? "";
   const order: "desc" | "asc" = request.query.order ?? "";

@@ -31,7 +31,7 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     fs.mkdirSync(snapshotDirectory);
   }
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 1; i++) {
     try {
       const result = await ringCamera.getSnapshot();
 
@@ -43,8 +43,8 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     // Wait for the snapshot to be taken in intervals so we get different images
     // await new Promise((resolve) => setTimeout(resolve, 4000));
   }
-
   // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
+
   await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 60);
 };
 
@@ -108,24 +108,36 @@ export const getEvents = async (
 
     // Fetch all events which happened on the day of
     const events = await readDirPromise(currentPath);
-
     // All the snapshots taken during the event
     const eventArray = await Promise.all(
       events.map(async (event: string) => {
+        const snapshotFiles = await readDirPromise(
+          path.join(currentPath, event)
+        );
         let snapshots = [];
 
+        // Convert into base64
         if (includeSnapshots) {
-          snapshots = (
-            await readDirPromise(currentPath + path.sep + event)
-          ).map((snapshot: string) => {
-            return encodeBase64(
-              currentPath + path.sep + event + path.sep + snapshot
-            );
+          snapshots = snapshotFiles.map((snapshot: string) => {
+            return {
+              media: encodeBase64(
+                currentPath + path.sep + event + path.sep + snapshot
+              ),
+              type: path.extname(snapshot) === ".mp4" ? "video" : "image",
+            };
+          });
+        } else {
+          snapshots = snapshotFiles.map((snapshot: string) => {
+            return {
+              media: "",
+              type: path.extname(snapshot) === ".mp4" ? "video" : "image",
+            };
           });
         }
 
         return {
           id: event,
+          day: day,
           snapshots: snapshots,
           hasVideo: snapshots.some((s) => s.type === "video"),
         };
@@ -141,7 +153,10 @@ export const getEvents = async (
   return array;
 };
 
-export const getEvent = async (day: string, datetime: string) => {
+export const getEvent = async (
+  day: string,
+  datetime: string
+): Promise<Event> => {
   const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}`;
   const readDirPromise = promisify(fs.readdir);
 
@@ -166,7 +181,7 @@ export const getEvent = async (day: string, datetime: string) => {
 
       return {
         media: encodeBase64(directory + path.sep + snapshot),
-        type: ext == ".webp" ? "image" : "video",
+        type: ext == ".webp" ? "image" : ("video" as "video" | "image"),
       };
     })
     .filter((snapshot) => snapshot !== null);
@@ -176,7 +191,12 @@ export const getEvent = async (day: string, datetime: string) => {
     return s.type != "video";
   });
 
-  return { id: datetime, snapshots: snapshots, day: day, hasVideo: hasVideo };
+  return {
+    id: datetime,
+    snapshots: snapshots,
+    day: day,
+    hasVideo: hasVideo,
+  };
 };
 
 export const getVideo = async (
