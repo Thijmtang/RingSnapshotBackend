@@ -27,9 +27,14 @@ router.get("/:day/:datetime", async (request: Request, response: Response) => {
   const day = request.params.day;
   const datetime = request.params.datetime;
 
-  const event = await getEvent(day, datetime);
+  try {
+    const event = await getEvent(day, datetime);
 
-  response.send(event);
+    response.send(event);
+  } catch (error) {
+    console.log(error);
+    response.status(404).json({ error: "Event not found" });
+  }
 });
 
 /**

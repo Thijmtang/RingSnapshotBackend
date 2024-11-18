@@ -148,12 +148,17 @@ export const getEvent = async (day: string, datetime: string) => {
   const snapshotsDir = await readDirPromise(directory);
   let hasVideo = false;
 
+  if (!fs.existsSync(directory)) {
+    throw new Error("Not found");
+  }
+
   let snapshots = snapshotsDir
     .filter((snapshot) => {
       const ext = path.extname(directory + path.sep + snapshot);
       if (ext == ".mp4") {
         hasVideo = true;
       }
+
       return ext !== ".mp4"; // Skip video files
     })
     .map((snapshot) => {
