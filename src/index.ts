@@ -17,6 +17,7 @@ import {
 } from "./helpers/ConfigHelper.js";
 import { promisify } from "util";
 import { readFile, writeFile } from "fs";
+import path from "path";
 dotenv.config();
 
 const app = express();
@@ -43,7 +44,7 @@ if (process.env.NODE_ENV == "PROD") {
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
-
+app.use("/snapshots", express.static(path.join("snapshots")));
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {

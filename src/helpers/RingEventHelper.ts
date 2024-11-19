@@ -6,7 +6,7 @@ import { promisify } from "util";
 import { Chartdata } from "../interfaces/Chartdata.js";
 import { Dashboard } from "../interfaces/dashboard.js";
 import { Event } from "../interfaces/event.js";
-import { encodeBase64, saveImage } from "./ImageHelper.js";
+import { getDirectoryUrl, saveImage } from "./ImageHelper.js";
 import { Snapshot } from "../interfaces/Snapshot.js";
 
 /**
@@ -41,7 +41,7 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     }
 
     // Wait for the snapshot to be taken in intervals so we get different images
-    // await new Promise((resolve) => setTimeout(resolve, 4000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
 
@@ -114,27 +114,17 @@ export const getEvents = async (
         const snapshotFiles = await readDirPromise(
           path.join(currentPath, event)
         );
-        let snapshots = [];
 
         // Convert into base64
-        if (includeSnapshots) {
-          snapshots = snapshotFiles.map((snapshot: string) => {
-            return {
-              media: encodeBase64(
-                currentPath + path.sep + event + path.sep + snapshot
-              ),
-              type: path.extname(snapshot) === ".mp4" ? "video" : "image",
-            };
-          });
-        } else {
-          snapshots = snapshotFiles.map((snapshot: string) => {
-            return {
-              media: "",
-              type: path.extname(snapshot) === ".mp4" ? "video" : "image",
-            };
-          });
-        }
-
+        const snapshots = snapshotFiles.map((snapshot: string) => {
+          return {
+            media: getDirectoryUrl(currentPath, event, snapshot),
+            type:
+              path.extname(snapshot) === ".mp4"
+                ? ("video" as "video")
+                : ("image" as "image"),
+          };
+        });
         return {
           id: event,
           day: day,
@@ -180,7 +170,7 @@ export const getEvent = async (
       const ext = path.extname(directory + path.sep + snapshot);
 
       return {
-        media: encodeBase64(directory + path.sep + snapshot),
+        media: getDirectoryUrl(directory, snapshot),
         type: ext == ".webp" ? "image" : ("video" as "video" | "image"),
       };
     })
@@ -213,7 +203,7 @@ export const getVideo = async (
   }
 
   return {
-    media: encodeBase64(directory),
+    media: getDirectoryUrl(directory),
     type: "video",
   };
 };

@@ -46,6 +46,7 @@ router.get("/:day/:datetime", async (request: Request, response: Response) => {
 router.get(
   "/:day/:datetime/video",
   async (request: Request, response: Response) => {
+    // @TODO this is deprecated, rewrite the codebase so the path return in the events, and the client fetched from the path.
     // response.setHeader("Content-Type", "video/mp4"); // Set the correct content type
     const day = request.params.day;
     const datetime = request.params.datetime;
