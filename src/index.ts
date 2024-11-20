@@ -44,7 +44,13 @@ if (process.env.NODE_ENV == "PROD") {
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
-app.use("/snapshots", express.static(path.join("snapshots")));
+app.use(
+  "/snapshots",
+  express.static(path.join("snapshots"), {
+    maxAge: "1d", // Cache for 1 day
+    etag: true,
+  })
+);
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
