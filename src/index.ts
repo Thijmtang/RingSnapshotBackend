@@ -43,11 +43,16 @@ app.use(
     const referer = req.headers.referer;
     const allowedDomain = process.env.SPA_FRONTEND ?? "http://localhost:5173";
 
+    // Since the api is hosted on the same domain, users can publicly access the files using the api/snapshots url, this is not alolowed
+    if (req.url.includes(allowedDomain + "/api")) {
+      return res.status(403).send("Forbidden");
+    }
+
     // Check if the referer exists and matches the allowed domain
     if (referer?.startsWith(allowedDomain)) {
       next(); // Allow access
     } else {
-      res.status(403).send("Forbidden"); // Deny access
+      res.status(403).send("Forbidden");
     }
   },
   (req, res, next) => {
