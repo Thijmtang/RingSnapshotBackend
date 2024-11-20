@@ -196,7 +196,7 @@ export const getVideo = async (
   day: string,
   datetime: string
 ): Promise<Snapshot> => {
-  const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}${path.sep}video.mp4`;
+  const directory = path.join("snapshots", day, datetime, "video.mp4");
 
   if (!fs.existsSync(directory)) {
     throw new Error("Not found");

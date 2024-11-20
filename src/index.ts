@@ -37,6 +37,29 @@ const corsOptions = {
 
 app.use(cors<Request>(corsOptions));
 
+app.use(
+  "/snapshots",
+  (req, res, next) => {
+    const referer = req.headers.referer;
+    const allowedDomain = process.env.SPA_FRONTEND ?? "http://localhost:5173";
+
+    // Check if the referer exists and matches the allowed domain
+    if (referer?.startsWith(allowedDomain)) {
+      next(); // Allow access
+    } else {
+      res.status(403).send("Forbidden"); // Deny access
+    }
+  },
+  (req, res, next) => {
+    // Allow range requests for video playback
+    if (req.headers.range) {
+      res.setHeader("Accept-Ranges", "bytes");
+    }
+    next();
+  },
+  express.static(path.join("snapshots"))
+);
+
 if (process.env.NODE_ENV == "PROD") {
   app.use(jwtCheck);
 }
@@ -44,13 +67,7 @@ if (process.env.NODE_ENV == "PROD") {
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
-app.use(
-  "/snapshots",
-  express.static(path.join("snapshots"), {
-    maxAge: "1d", // Cache for 1 day
-    etag: true,
-  })
-);
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
