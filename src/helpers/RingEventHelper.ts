@@ -317,3 +317,13 @@ export const getDashboardData = async () => {
 
   return dashboard;
 };
+
+export const deleteEvent = async (day: string, datetime: string) => {
+  const directory = path.join("snapshots", day, datetime);
+  console.log(directory);
+  if (!fs.existsSync(directory)) {
+    throw new Error("Not found");
+  }
+
+  fs.rmSync(directory, { recursive: true, force: true });
+};

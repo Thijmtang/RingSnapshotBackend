@@ -118,22 +118,19 @@ app.listen(PORT, async () => {
           const lastEvent = await getLastTrackedEvent();
           // We're only fetching the latest event
           const event = value.events[0];
+
           // Event has already been processed
           if (lastEvent === event.ding_id_str || event.kind != "motion") {
             return;
           }
 
           await saveLastTrackedEvent(event.ding_id_str);
+
           // Add workload to queue
           queue.push(() => {
             const date = Date.now();
             saveEventImages(ringDoorbell, date);
           });
-
-          // queue.push(() => {
-          ringDoorbell.recordToFile("./test.mp4");
-          // });
-          // await new Promise((resolve) => setTimeout(resolve, 5000));
         })
         .catch((error) => {
           console.log("Error occurred:", error);

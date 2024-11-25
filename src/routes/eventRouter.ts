@@ -1,6 +1,7 @@
 import express from "express";
 import { Request, Response } from "express";
 import {
+  deleteEvent,
   flattenEvents,
   getEvent,
   getEvents,
@@ -36,9 +37,25 @@ router.get("/:day/:datetime", async (request: Request, response: Response) => {
     response.send(event);
   } catch (error) {
     console.log(error);
-    response.status(404).json({ error: "Event not found" });
+    response.status(400).json({ error: "Event not found" });
   }
 });
+
+router.delete(
+  "/:day/:datetime",
+  async (request: Request, response: Response) => {
+    const day = request.params.day;
+    const datetime = request.params.datetime;
+
+    try {
+      deleteEvent(day, datetime);
+      response.send();
+    } catch (error) {
+      console.log(error);
+      response.status(404).json({ error: "File not found" });
+    }
+  }
+);
 
 /**
  * Returns a recorded video of the event
