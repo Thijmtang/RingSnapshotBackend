@@ -34,7 +34,7 @@ const app = express();
 const httpServer = createServer(app); // Create an HTTP server with Express
 
 const io = new Server(httpServer, {
-  transports: ["websocket", "polling"],
+  transports: ["websocket"],
   cors: corsOptions,
 });
 const jwtCheck = auth({
