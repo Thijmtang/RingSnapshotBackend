@@ -73,6 +73,11 @@ app.use(
   express.static(path.join("snapshots"))
 );
 
+app.use("/test", (req, res, next) => {
+  io.emit("motion");
+  res.send();
+});
+
 if (process.env.NODE_ENV == "PROD") {
   app.use(jwtCheck);
 }
