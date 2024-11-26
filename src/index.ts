@@ -130,8 +130,6 @@ httpServer.listen(PORT, async () => {
       ringDoorbell
         .getEvents(cameraOptions)
         .then(async (value: CameraEventResponse) => {
-          io.emit("motion");
-
           const lastEvent = await getLastTrackedEvent();
           // We're only fetching the latest event
           const event = value.events[0];
@@ -142,6 +140,7 @@ httpServer.listen(PORT, async () => {
           }
 
           await saveLastTrackedEvent(event.ding_id_str);
+          io.emit("motion");
 
           // Add workload to queue
           queue.push(async () => {
