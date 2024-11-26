@@ -188,7 +188,7 @@ export const getEvent = async (
     id: datetime,
     snapshots: snapshots,
     day: day,
-    hasVideo: minutesAgo > 1 ? hasVideo : false,
+    hasVideo: minutesAgo >= 1 ? hasVideo : false,
   };
 };
 
@@ -225,7 +225,7 @@ export const flattenEvents = (
         id: event.id,
         snapshots: event.snapshots,
         day: day.day,
-        hasVideo: event.hasVideo, // False for now, not neccessary
+        hasVideo: event.hasVideo,
       });
     });
   });
