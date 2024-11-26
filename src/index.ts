@@ -18,15 +18,10 @@ import {
 import { promisify } from "util";
 import { readFile, writeFile } from "fs";
 import path from "path";
+import { Server } from "socket.io";
+import { createServer } from "node:http";
+
 dotenv.config();
-
-const app = express();
-
-const jwtCheck = auth({
-  audience: process.env.AUTH0_IDENTIFIER,
-  issuerBaseURL: process.env.AUTH0_DOMAIN,
-  tokenSigningAlg: "RS256",
-});
 
 const corsOptions = {
   origin: process.env.SPA_FRONTEND,
@@ -34,6 +29,18 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
+
+const app = express();
+const httpServer = createServer(app); // Create an HTTP server with Express
+
+const io = new Server(httpServer, {
+  cors: corsOptions,
+});
+const jwtCheck = auth({
+  audience: process.env.AUTH0_IDENTIFIER,
+  issuerBaseURL: process.env.AUTH0_DOMAIN,
+  tokenSigningAlg: "RS256",
+});
 
 app.use(cors<Request>(corsOptions));
 
@@ -69,13 +76,15 @@ if (process.env.NODE_ENV == "PROD") {
   app.use(jwtCheck);
 }
 
+app.use(jwtCheck);
+
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, async () => {
+httpServer.listen(PORT, async () => {
   console.log(`Express backend running on localhost:${PORT}`);
   // Run background processes to actively create snapshots when detecting motion.
   const queue = new Queue({ results: [] });
@@ -120,16 +129,17 @@ app.listen(PORT, async () => {
           const event = value.events[0];
 
           // Event has already been processed
-          if (lastEvent === event.ding_id_str || event.kind != "motion") {
+          if (lastEvent === event.ding_id_str) {
             return;
           }
 
           await saveLastTrackedEvent(event.ding_id_str);
 
           // Add workload to queue
-          queue.push(() => {
+          queue.push(async () => {
             const date = Date.now();
-            saveEventImages(ringDoorbell, date);
+            await saveEventImages(ringDoorbell, date);
+            io.emit("motion");
           });
         })
         .catch((error) => {
