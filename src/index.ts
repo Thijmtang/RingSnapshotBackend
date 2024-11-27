@@ -128,7 +128,7 @@ httpServer.listen(PORT, async () => {
         .getEvents(cameraOptions)
         .then(async (value: CameraEventResponse) => {
           const lastEvent = await getLastTrackedEvent();
-
+          const firstEvent = lastEvent === "";
           // We're only fetching the latest event
           const event = value.events[0];
 
@@ -139,6 +139,11 @@ httpServer.listen(PORT, async () => {
 
           // New event, keep track of it so we won't repeat and create duplicates
           await saveLastTrackedEvent(event.ding_id_str);
+
+          // Since no motion has been detected, we will save the most recent ding as last tracked event to prevent, untrue events
+          if (firstEvent) {
+            return;
+          }
 
           // Add workload to queue
           queue.push(async () => {

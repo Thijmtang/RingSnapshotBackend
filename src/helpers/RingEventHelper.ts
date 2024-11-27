@@ -180,11 +180,6 @@ export const getEvent = async (
     })
     .filter((snapshot) => snapshot !== null);
 
-  // We are only returning images, to keep the legacy code working
-  snapshots = snapshots.filter((s) => {
-    return s.type != "video";
-  });
-
   // Only allow user to view a video, if its done recording and encoding
   const date = moment(parseInt(datetime)); // Parse the day
   const minutesAgo = moment().diff(date, "minutes");
