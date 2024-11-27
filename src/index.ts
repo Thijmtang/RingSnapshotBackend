@@ -137,6 +137,7 @@ httpServer.listen(PORT, async () => {
             return;
           }
 
+          // New event, keep track of it so we won't repeat and create duplicates
           await saveLastTrackedEvent(event.ding_id_str);
 
           // Add workload to queue
