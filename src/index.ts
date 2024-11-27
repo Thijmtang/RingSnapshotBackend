@@ -128,6 +128,7 @@ httpServer.listen(PORT, async () => {
         .getEvents(cameraOptions)
         .then(async (value: CameraEventResponse) => {
           const lastEvent = await getLastTrackedEvent();
+
           // We're only fetching the latest event
           const event = value.events[0];
 
@@ -135,6 +136,8 @@ httpServer.listen(PORT, async () => {
           if (lastEvent === event.ding_id_str) {
             return;
           }
+
+          await saveLastTrackedEvent(event.ding_id_str);
 
           // Add workload to queue
           queue.push(async () => {
