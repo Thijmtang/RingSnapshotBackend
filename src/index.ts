@@ -73,16 +73,16 @@ app.use(
   express.static(path.join("snapshots"))
 );
 
-app.use("/test", (req, res, next) => {
-  io.emit("motion");
-  res.send();
-});
-
 if (process.env.NODE_ENV == "PROD") {
   app.use(jwtCheck);
 }
 
-app.use(jwtCheck);
+if (process.env.NODE_ENV !== "PROD") {
+  app.use("/test", (req, res, next) => {
+    io.emit("motion");
+    res.send();
+  });
+}
 
 // Define routes
 app.use("/dashboard", dashboardRouter);
@@ -110,9 +110,6 @@ httpServer.listen(PORT, async () => {
   };
   ringApi.onRefreshTokenUpdated.subscribe(
     async ({ newRefreshToken, oldRefreshToken }) => {
-      console.log("Refresh Token Updated: ", newRefreshToken);
-      // If you are implementing a project that use `ring-client-api`, you should subscribe to onRefreshTokenUpdated and update your config each time it fires an event
-      // Here is an example using a .env file for configuration
       if (!oldRefreshToken) {
         return;
       }
@@ -139,7 +136,6 @@ httpServer.listen(PORT, async () => {
             return;
           }
 
-          await saveLastTrackedEvent(event.ding_id_str);
           io.emit("motion");
 
           // Add workload to queue
