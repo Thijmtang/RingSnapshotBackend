@@ -136,8 +136,6 @@ httpServer.listen(PORT, async () => {
             return;
           }
 
-          io.emit("motion");
-
           // Add workload to queue
           queue.push(async () => {
             const date = Date.now();
