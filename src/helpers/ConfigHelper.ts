@@ -31,7 +31,7 @@ export const getLastTrackedEvent = async () => {
 };
 
 /**
- * Get the saved ring ding
+ * Stores the last saved event
  */
 export const saveLastTrackedEvent = async (id: string) => {
   const config = getConfig();

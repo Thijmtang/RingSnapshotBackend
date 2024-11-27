@@ -8,6 +8,8 @@ import { Dashboard } from "../interfaces/dashboard.js";
 import { Event } from "../interfaces/event.js";
 import { getDirectoryUrl, saveImage } from "./ImageHelper.js";
 import { Snapshot } from "../interfaces/Snapshot.js";
+import { getDirectorySizeInBytes } from "./DirectoryHelper.js";
+import { DonutChartCell } from "../interfaces/DonutChartCell.js";
 
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -43,9 +45,11 @@ export const saveEventImages = async (ringCamera: RingCamera, date: number) => {
     // Wait for the snapshot to be taken in intervals so we get different images
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
 
+  // EXPERIMENTAL, This is not as viable as the snapshots but still nice to have for the user
   await ringCamera.recordToFile(`${snapshotDirectory}video.mp4`, 60);
+
+  return getEvent(dateTodayString, date.toString());
 };
 
 /**
@@ -147,7 +151,7 @@ export const getEvent = async (
   day: string,
   datetime: string
 ): Promise<Event> => {
-  const directory = `.${path.sep}snapshots${path.sep}${day}${path.sep}${datetime}`;
+  const directory = path.join("snapshots", day, datetime);
   const readDirPromise = promisify(fs.readdir);
 
   const snapshotsDir = await readDirPromise(directory);
@@ -304,18 +308,57 @@ export const getDashboardData = async () => {
   const motionToday = flattenEvents(await getEvents("today"), "desc");
 
   const monthEvents = await getEvents("month");
-
   const chartData = formatEventsForChart(monthEvents);
-
   const averageDailyMotion = getAverageMotion(monthEvents);
 
+  const storageToday = await getTodayStorageUsed();
+
+  getTodayStorageUsed();
   const dashboard: Dashboard = {
     todayEvents: motionToday,
     chartData: chartData,
     averageDailyMotion: averageDailyMotion,
+    storageSpaceUsedToday: storageToday,
   };
 
   return dashboard;
+};
+
+export const getTodayStorageUsed = async (): Promise<DonutChartCell[]> => {
+  const directory = `.${path.sep}snapshots`;
+  const readDirPromise = promisify(fs.readdir);
+  const dateTodayString = moment(new Date()).format("DD-MM-yyyy");
+
+  const days = await readDirPromise(directory);
+  let storageToday = 0;
+  let storageRest = 0;
+
+  for (const element of days) {
+    const size = await getDirectorySizeInBytes(
+      path.join(directory, element),
+      "megabyte"
+    );
+
+    if (dateTodayString === element) {
+      storageToday += size;
+      continue;
+    }
+
+    storageRest += size;
+  }
+
+  return [
+    {
+      name: "Today",
+      value: storageToday,
+      color: "teal",
+    },
+    {
+      name: "Rest",
+      value: storageRest,
+      color: "yellow.6",
+    },
+  ];
 };
 
 export const deleteEvent = async (day: string, datetime: string) => {

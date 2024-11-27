@@ -8,7 +8,7 @@ import {
   CameraEventResponse,
   RingApi,
 } from "ring-client-api";
-import { saveEventImages } from "./helpers/RingEventHelper.js";
+import { getEvent, saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
 import {
@@ -143,8 +143,9 @@ httpServer.listen(PORT, async () => {
           // Add workload to queue
           queue.push(async () => {
             const date = Date.now();
-            await saveEventImages(ringDoorbell, date);
-            io.emit("motion");
+            const event = await saveEventImages(ringDoorbell, date);
+
+            io.emit("motion", event);
           });
         })
         .catch((error) => {
