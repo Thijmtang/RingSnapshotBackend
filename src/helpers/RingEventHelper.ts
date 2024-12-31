@@ -229,7 +229,7 @@ export const flattenEvents = (
     });
   });
 
-  const sortedEvents = events.sort((a, b) => {
+  events.sort((a, b) => {
     const dateA = moment(a.day, "DD-MM-YYYY"); // Adjust date format as needed
     const dateB = moment(b.day, "DD-MM-YYYY"); // Adjust date format as needed
 
@@ -242,9 +242,9 @@ export const flattenEvents = (
 
   switch (order) {
     case "asc":
-      return sortedEvents;
+      return events;
     case "desc":
-      return sortedEvents.reverse();
+      return events.reverse();
   }
 };
 

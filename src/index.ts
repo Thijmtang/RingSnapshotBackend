@@ -3,23 +3,18 @@ import * as dotenv from "dotenv";
 import { auth } from "express-oauth2-jwt-bearer";
 import express, { Request } from "express";
 import Queue from "queue";
-import {
-  CameraEventOptions,
-  CameraEventResponse,
-  RingApi,
-} from "ring-client-api";
-import { getEvent, saveEventImages } from "./helpers/RingEventHelper.js";
+import { CameraEventOptions, CameraEventResponse } from "ring-client-api";
+import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
 import {
   getLastTrackedEvent,
   saveLastTrackedEvent,
 } from "./helpers/ConfigHelper.js";
-import { promisify } from "util";
-import { readFile, writeFile } from "fs";
 import path from "path";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
+import { RingClientApi } from "./models/RingClientApi.js";
 
 dotenv.config();
 
@@ -51,7 +46,7 @@ app.use(
     const referer = req.headers.referer;
     const allowedDomain = process.env.SPA_FRONTEND ?? "http://localhost:5173";
 
-    // Since the api is hosted on the same domain, users can publicly access the files using the api/snapshots url, this is not alolowed
+    // Since the api is hosted on the same domain, users can publicly access the files using the api/snapshots url, this is not allowed
     if (req.url.includes(allowedDomain + "/api")) {
       return res.status(403).send("Forbidden");
     }
@@ -75,9 +70,7 @@ app.use(
 
 if (process.env.NODE_ENV == "PROD") {
   app.use(jwtCheck);
-}
-
-if (process.env.NODE_ENV !== "PROD") {
+} else {
   app.use("/test", (req, res, next) => {
     io.emit("motion");
     res.send();
@@ -89,37 +82,28 @@ app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
 
 const PORT = process.env.PORT || 3000;
+let REFRESH_TOKEN = process.env.RING_REFRESH_TOKEN;
 
 httpServer.listen(PORT, async () => {
   console.log(`Express backend running on localhost:${PORT}`);
   // Run background processes to actively create snapshots when detecting motion.
   const queue = new Queue({ results: [] });
   queue.autostart = true;
-  const ringApi = new RingApi({
-    refreshToken: process.env.RING_REFRESH_TOKEN,
-    cameraStatusPollingSeconds: 2,
-  });
+
+  const boeie = new RingClientApi();
+  const ringApi = boeie.getClient();
+
   const locations = await ringApi.getLocations();
   const location = locations[0];
   const ringDoorbell = location.cameras[0];
+
   // Configure the filters, for fetching the events
   const cameraOptions: CameraEventOptions = {
     limit: 1,
     state: "person_detected",
     kind: "motion",
   };
-  ringApi.onRefreshTokenUpdated.subscribe(
-    async ({ newRefreshToken, oldRefreshToken }) => {
-      if (!oldRefreshToken) {
-        return;
-      }
-      const currentConfig = await promisify(readFile)(".env"),
-        updatedConfig = currentConfig
-          .toString()
-          .replace(oldRefreshToken, newRefreshToken);
-      await promisify(writeFile)(".env", updatedConfig);
-    }
-  );
+
   try {
     // Polling
     ringDoorbell.onData.subscribe(async (data) => {
