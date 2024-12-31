@@ -345,12 +345,12 @@ export const getTodayStorageUsed = async (): Promise<DonutChartCell[]> => {
   return [
     {
       name: "Today",
-      value: storageToday,
+      value: Number(storageToday.toFixed(2)),
       color: "teal",
     },
     {
       name: "Rest",
-      value: storageRest,
+      value: Number(storageRest.toFixed(2)),
       color: "yellow.6",
     },
   ];
