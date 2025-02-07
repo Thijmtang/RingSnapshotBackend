@@ -1,4 +1,8 @@
+import { Snapshot } from "./Snapshot.js";
+
 export interface Event {
   id: string;
-  snapshots: Array<string>;
+  day: string;
+  snapshots?: Array<Snapshot>;
+  hasVideo: boolean;
 }
