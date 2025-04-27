@@ -431,8 +431,8 @@ export const getRingSubscriptionMoneySaved =
       .filter((item) => fs.statSync(path.join(directory, item)).isDirectory());
 
     const oldest = folders.reduce((earliest, current) => {
-      const currentDate = moment(current, "DD-MM-YY", true);
-      const earliestDate = moment(earliest, "DD-MM-YY", true);
+      const currentDate = moment(current, "DD-MM-YYYY", true);
+      const earliestDate = moment(earliest, "DD-MM-YYYY", true);
 
       // Add validation to handle invalid dates
       if (!currentDate.isValid()) return earliest;
