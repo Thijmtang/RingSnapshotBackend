@@ -7,6 +7,8 @@ import { CameraEventOptions, CameraEventResponse } from "ring-client-api";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
 import eventRouter from "./routes/eventRouter.js";
 import dashboardRouter from "./routes/dashboardRouter.js";
+import resourcesRouter from "./routes/resourcesRouter.js";
+
 import {
   getLastTrackedEvent,
   saveLastTrackedEvent,
@@ -80,6 +82,7 @@ if (process.env.NODE_ENV == "PROD") {
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
+app.use("/resources", resourcesRouter);
 
 const PORT = process.env.PORT || 3000;
 let REFRESH_TOKEN = process.env.RING_REFRESH_TOKEN;

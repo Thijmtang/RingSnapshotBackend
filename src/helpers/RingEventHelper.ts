@@ -10,6 +10,7 @@ import { getDirectoryUrl, saveImage } from "./ImageHelper.js";
 import { Snapshot } from "../interfaces/Snapshot.js";
 import { getDirectorySizeInBytes } from "./DirectoryHelper.js";
 import { DonutChartCell } from "../interfaces/DonutChartCell.js";
+import { ResourcesDTO } from "../interfaces/resourcesDto.js";
 
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -147,6 +148,12 @@ export const getEvents = async (
   return array;
 };
 
+/**
+ * Retrieves full data object of an event including media.
+ * @param day
+ * @param datetime
+ * @returns
+ */
 export const getEvent = async (
   day: string,
   datetime: string
@@ -364,4 +371,15 @@ export const deleteEvent = async (day: string, datetime: string) => {
   }
 
   fs.rmSync(directory, { recursive: true, force: true });
+};
+
+export const getResourcesData = async () => {
+  const storageToday = await getTodayStorageUsed();
+
+  getTodayStorageUsed();
+  const resourcesDTO: ResourcesDTO = {
+    storageSpaceUsedToday: storageToday,
+  };
+
+  return resourcesDTO;
 };
