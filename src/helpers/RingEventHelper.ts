@@ -11,6 +11,8 @@ import { Snapshot } from "../interfaces/Snapshot.js";
 import { getDirectorySizeInBytes } from "./DirectoryHelper.js";
 import { DonutChartCell } from "../interfaces/DonutChartCell.js";
 import { ResourcesDTO } from "../interfaces/resourcesDto.js";
+import { MediaDetails } from "../interfaces/MediaDetails.js";
+import { RingSubscriptionMoneySaved } from "../interfaces/RingSubscriptionSaved.js";
 
 /**
  * Save 5 snapshots with a interval to capture as much of the motion as possible, since getting a snapshot has a huge delay
@@ -373,13 +375,83 @@ export const deleteEvent = async (day: string, datetime: string) => {
   fs.rmSync(directory, { recursive: true, force: true });
 };
 
-export const getResourcesData = async () => {
+export const getResourcesData = async (): Promise<ResourcesDTO> => {
   const storageToday = await getTodayStorageUsed();
+  const mediaDetails = await countMedia();
+  const financeDetails = await getRingSubscriptionMoneySaved();
 
-  getTodayStorageUsed();
   const resourcesDTO: ResourcesDTO = {
     storageSpaceUsedToday: storageToday,
+    mediaDetails: mediaDetails,
+    financeDetails: financeDetails,
   };
 
   return resourcesDTO;
 };
+
+export const countMedia = async (): Promise<MediaDetails> => {
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+  const videoExtensions = [".mp4"];
+
+  let counts = { images: 0, videos: 0 };
+  const directory = `.${path.sep}snapshots`;
+
+  async function walk(dir) {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        await walk(fullPath); // Recursively walk through subdirectories
+      } else {
+        const ext = path.extname(entry.name).toLowerCase();
+
+        if (imageExtensions.includes(ext)) {
+          counts.images++;
+        } else if (videoExtensions.includes(ext)) {
+          counts.videos++;
+        }
+      }
+    }
+  }
+
+  await walk(directory);
+
+  return counts;
+};
+
+export const getRingSubscriptionMoneySaved =
+  async (): Promise<RingSubscriptionMoneySaved> => {
+    const directory = `.${path.sep}snapshots`;
+    const ringMonthlyFeeEuro = 10;
+
+    const folders = fs
+      .readdirSync(directory)
+      .filter((item) => fs.statSync(path.join(directory, item)).isDirectory());
+
+    const oldest = folders.reduce((earliest, current) => {
+      const currentDate = moment(current, "DD-MM-YY", true);
+      const earliestDate = moment(earliest, "DD-MM-YY", true);
+
+      // Add validation to handle invalid dates
+      if (!currentDate.isValid()) return earliest;
+      if (!earliestDate.isValid()) return current;
+
+      return currentDate.isBefore(earliestDate) ? current : earliest;
+    });
+
+    const date = moment(oldest, "DD-MM-YYYY");
+    // 2. Get today's date
+    const now = moment();
+
+    // 3. Calculate the difference in months
+    const monthsPassed = now.diff(date, "months");
+
+    return {
+      earliestDate: oldest,
+      monthsPassed: monthsPassed,
+      ringMonthlyFeeEuro: ringMonthlyFeeEuro,
+      moneySaved: ringMonthlyFeeEuro * monthsPassed,
+    };
+  };
