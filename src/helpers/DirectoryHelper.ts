@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import getFolderSize from "get-folder-size";
 
 export const getDirectorySizeInBytes = async (

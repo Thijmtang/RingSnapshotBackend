@@ -1,7 +1,7 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
 import { auth } from "express-oauth2-jwt-bearer";
-import express, { Request } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import Queue from "queue";
 import { CameraEventOptions, CameraEventResponse } from "ring-client-api";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
@@ -17,6 +17,8 @@ import path from "path";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 import { RingClientApi } from "./models/RingClientApi.js";
+import { Event } from "./interfaces/event.js";
+import { auth0JwtCheck, checkAuthorizedEmail } from "./helpers/Middleware.js";
 
 dotenv.config();
 
@@ -28,16 +30,11 @@ const corsOptions = {
 };
 
 const app = express();
-const httpServer = createServer(app); // Create an HTTP server with Express
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   transports: ["websocket"],
   cors: corsOptions,
-});
-const jwtCheck = auth({
-  audience: process.env.AUTH0_IDENTIFIER,
-  issuerBaseURL: process.env.AUTH0_DOMAIN,
-  tokenSigningAlg: "RS256",
 });
 
 app.use(cors<Request>(corsOptions));
@@ -70,15 +67,21 @@ app.use(
   express.static(path.join("snapshots"))
 );
 
-if (process.env.NODE_ENV == "PROD") {
-  app.use(jwtCheck);
-} else {
+if (process.env.NODE_ENV !== "PROD") {
   app.use("/test", (req, res, next) => {
-    io.emit("motion");
+    const event: Event = {
+      day: "27-06-2024",
+      id: "1732818234083-0",
+      snapshots: [],
+      hasVideo: true,
+    };
+    io.emit("motion", event);
     res.send();
   });
 }
 
+app.use(auth0JwtCheck());
+app.use(checkAuthorizedEmail);
 // Define routes
 app.use("/dashboard", dashboardRouter);
 app.use("/event", eventRouter);
@@ -92,9 +95,12 @@ httpServer.listen(PORT, async () => {
   // Run background processes to actively create snapshots when detecting motion.
   const queue = new Queue({ results: [] });
   queue.autostart = true;
+  if (process.env.NODE_ENV !== "PROD") {
+    return;
+  }
 
-  const boeie = new RingClientApi();
-  const ringApi = boeie.getClient();
+  const client = new RingClientApi();
+  const ringApi = client.getClient();
 
   const locations = await ringApi.getLocations();
   const location = locations[0];
@@ -106,7 +112,6 @@ httpServer.listen(PORT, async () => {
     state: "person_detected",
     kind: "motion",
   };
-
   try {
     // Polling
     ringDoorbell.onData.subscribe(async (data) => {
