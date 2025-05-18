@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
 
 export const checkAuthorizedEmail = (
@@ -10,7 +10,7 @@ export const checkAuthorizedEmail = (
   const user = req.auth?.payload;
   const allowedMails = new Set(process.env.ALLOWED_EMAILS?.split(",") || []);
   if (!user?.email || !allowedMails.has(user.email)) {
-    return res.status(401).send("Email not allowed");
+    return res.status(403).send("Email not allowed");
   }
 
   next();

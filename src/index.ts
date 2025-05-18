@@ -1,7 +1,6 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
-import { auth } from "express-oauth2-jwt-bearer";
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request } from "express";
 import Queue from "queue";
 import { CameraEventOptions, CameraEventResponse } from "ring-client-api";
 import { saveEventImages } from "./helpers/RingEventHelper.js";
